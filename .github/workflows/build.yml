@@ -18,12 +18,40 @@ jobs:
       - name: Extract Project
         run: unzip RabiaUrduKeyboard_Fixed_v2.zip
 
-      - name: Build APK
+      - name: Fix Gradle Version
         working-directory: RabiaUrduKeyboard
         run: |
-          gradle wrapper --gradle-version 8.1.1
+          cat > build.gradle << 'EOF'
+          buildscript {
+              repositories {
+                  google()
+                  mavenCentral()
+              }
+              dependencies {
+                  classpath 'com.android.tools.build:gradle:8.2.2'
+              }
+          }
+          allprojects {
+              repositories {
+                  google()
+                  mavenCentral()
+              }
+          }
+          EOF
+          mkdir -p gradle/wrapper
+          cat > gradle/wrapper/gradle-wrapper.properties << 'EOF2'
+          distributionBase=GRADLE_USER_HOME
+          distributionPath=wrapper/dists
+          distributionUrl=https\://services.gradle.org/distributions/gradle-8.4-bin.zip
+          zipStoreBase=GRADLE_USER_HOME
+          zipStorePath=wrapper/dists
+          EOF2
+          curl -fsSL "https://github.com/gradle/gradle/raw/v8.4.0/gradlew" -o gradlew
           chmod +x gradlew
-          ./gradlew assembleDebug --no-daemon
+
+      - name: Build APK
+        working-directory: RabiaUrduKeyboard
+        run: ./gradlew assembleDebug --no-daemon
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
